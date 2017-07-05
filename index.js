@@ -1036,7 +1036,7 @@ function connectToLightstreamer() {
 }
 
 // Subscribe to lightstreamer
-function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq) {
+function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq, callBackFunc) {
 	/**
 	 * @param {string} subscriptionMode 
 	 *	Permitted values are: MERGE, DISTINCT, RAW, COMMAND
@@ -1047,6 +1047,8 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq) {
 	 *	STRIKE_PRICE, ODDS
 	 * @param {number} maxFreq
 	 *	Number of max updated per second
+	 * @param {function} callBackFunc
+	 *	Callback function
 	 */
 	if (Object.getOwnPropertyNames(lsClient).length !== 0) {
 		throw new Error('Lightstreamer is not connected');
@@ -1058,6 +1060,8 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq) {
 		let str = [];
 		let colNames = ['RUN_TIME', 'EPIC'].concat(fields);
 		str.push(colNames);
+		let strObj = {};
+		strObj["colNames"] = colNames;
 		// str.push(os.EOL);
 
 		subscription = new Subscription(subscriptionMode, items, fields);
@@ -1084,20 +1088,24 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq) {
 			},
 
 			onItemUpdate: updateInfo => {
-
-				str.push(new Date().getTime());
-
-				str.push(updateInfo.getItemName().split(':')[1]); // epic without 'L1:'
-
-				updateInfo.forEachField((fieldName, fieldPos, value) => {
-
-					str.push(value);
-
-				});
-
-				//str.push(os.EOL);
-				console.log(str.join(','));
-				str = [];
+				if (typeof callBackFunc !== 'undefined' && callBackFunc !== null) {
+					strObj["date"] = new Date().getTime();
+					strObj["epic"] = updateInfo.getItemName().split(':')[1];
+					updateInfo.forEachField((fieldName, fieldPos, value) => {
+						strObj[fieldName] = value;
+					});
+					callBackFunc(strObj);
+					strObj = {};
+				}
+				else {
+					str.push(new Date().getTime());	
+					str.push(updateInfo.getItemName().split(':')[1]); // epic without 'L1:'
+					updateInfo.forEachField((fieldName, fieldPos, value) => {
+						str.push({fieldName: value});
+					});
+					console.log(str.join(','));
+					str = [];
+				}
 			}
 		});
 
