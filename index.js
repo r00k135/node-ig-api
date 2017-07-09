@@ -1061,7 +1061,7 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq, call
 		let colNames = ['RUN_TIME', 'EPIC'].concat(fields);
 		str.push(colNames);
 		let strObj = {};
-		strObj["colNames"] = colNames;
+		//strObj["colNames"] = colNames;
 		// str.push(os.EOL);
 
 		subscription = new Subscription(subscriptionMode, items, fields);
@@ -1090,7 +1090,7 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq, call
 			onItemUpdate: updateInfo => {
 				if (typeof callBackFunc !== 'undefined' && callBackFunc !== null) {
 					strObj["date"] = new Date().getTime();
-					strObj["epic"] = updateInfo.getItemName().split(':')[1];
+					strObj["epic"] = updateInfo.getItemName();
 					updateInfo.forEachField((fieldName, fieldPos, value) => {
 						strObj[fieldName] = value;
 					});
@@ -1099,7 +1099,7 @@ function subscribeToLightstreamer(subscriptionMode, items, fields, maxFreq, call
 				}
 				else {
 					str.push(new Date().getTime());	
-					str.push(updateInfo.getItemName().split(':')[1]); // epic without 'L1:'
+					str.push(updateInfo.getItemName());
 					updateInfo.forEachField((fieldName, fieldPos, value) => {
 						str.push({fieldName: value});
 					});
